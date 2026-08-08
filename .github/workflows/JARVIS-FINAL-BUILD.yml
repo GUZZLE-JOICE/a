@@ -1,0 +1,95 @@
+name: Build JARVIS V3.3 Installed Windows App
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Download repository
+        uses: actions/checkout@v6
+
+      - name: Set up stable Python builder
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install build and MCP dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install "mcp[cli]>=2.0.0,<3"
+
+      - name: Verify the modules before packaging
+        shell: pwsh
+        run: |
+          python -c "import typer; import mcp; import mcp.client.auth; import mcp.client.streamable_http; import mcp.shared.auth; print('MCP + typer imports OK')"
+          python -c "import playwright.sync_api; import uiautomation; import pyautogui; import pyperclip; import webview; print('Desktop + native window imports OK')"
+
+      - name: Build native JARVIS application payload
+        shell: pwsh
+        run: |
+          python -m PyInstaller --noconfirm --clean --onefile --windowed `
+            --name JARVIS `
+            --collect-all playwright `
+            --collect-all uiautomation `
+            --collect-all comtypes `
+            --hidden-import httpx2 `
+            --hidden-import mcp `
+            --hidden-import mcp.client.auth `
+            --hidden-import mcp.client.streamable_http `
+            --hidden-import mcp.shared.auth `
+            --hidden-import pyautogui `
+            --hidden-import pyperclip `
+            --hidden-import pypdf `
+            --hidden-import docx `
+            --hidden-import webview.platforms.edgechromium `
+            --hidden-import tkinter `
+            --hidden-import jarvis_overlay `
+            --hidden-import jarvis_business `
+            --hidden-import jarvis_accounts `
+            --hidden-import jarvis_desktop_agent `
+            --hidden-import jarvis_remote_server `
+            --add-data "jarvis_v2.html:." `
+            --add-data "jarvis_web.html:." `
+            --add-data "jarvis_server_config.json:." `
+            --add-data "manifest.webmanifest:." `
+            --add-data "service-worker.js:." `
+            --add-data "browser_extension:browser_extension" `
+            jarvis_app.py
+
+      - name: Verify native app payload
+        shell: pwsh
+        run: |
+          if (!(Test-Path "dist/JARVIS.exe")) { throw "App payload was not produced" }
+          $size = (Get-Item "dist/JARVIS.exe").Length
+          if ($size -lt 1000000) { throw "EXE is unexpectedly small" }
+          Write-Host "Native app payload ready ($size bytes)"
+
+      - name: Build Windows MSI installer
+        shell: pwsh
+        run: |
+          dotnet --info
+          dotnet build installer/JARVIS.Installer.wixproj --configuration Release
+          New-Item -ItemType Directory -Force -Path installer-output | Out-Null
+          $msi = Get-ChildItem installer/bin/Release -Filter *.msi -Recurse | Select-Object -First 1
+          if (!$msi) { throw "MSI installer was not produced" }
+          Copy-Item $msi.FullName installer-output/JARVIS_V3_3_CLASSIC_APP.msi
+          $size = (Get-Item installer-output/JARVIS_V3_3_CLASSIC_APP.msi).Length
+          if ($size -lt 1000000) { throw "MSI is unexpectedly small" }
+          Write-Host "SUCCESS: JARVIS_V3_3_CLASSIC_APP.msi ($size bytes)"
+
+      - name: Upload installed JARVIS app
+        uses: actions/upload-artifact@v7
+        with:
+          name: JARVIS V3.3 Windows App
+          path: installer-output/JARVIS_V3_3_CLASSIC_APP.msi
+          if-no-files-found: error
+          retention-days: 14
+          archive: false
