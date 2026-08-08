@@ -1,0 +1,10 @@
+playwright>=1.54,<2
+pypdf>=5,<7
+python-docx>=1.1,<2
+pyinstaller>=6,<7
+pyautogui>=0.9.54,<1
+pyperclip>=1.9,<2
+uiautomation>=2.0.29,<3
+pywebview>=6.2.1,<7
+mcp>=2.0.0,<3
+httpx2>=2.5.0,<3

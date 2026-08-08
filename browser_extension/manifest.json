@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "JARVIS Local Browser Link",
+  "version": "1.2.0",
+  "description": "Pairs Edge or Chrome with local JARVIS for normal browser control and link-following research.",
+  "permissions": ["activeTab", "alarms", "scripting", "storage", "tabs"],
+  "host_permissions": ["http://127.0.0.1:5015/*", "http://localhost:5015/*", "<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "JARVIS Local Browser Link",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

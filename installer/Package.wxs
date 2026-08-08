@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package
+      Name="J.A.R.V.I.S."
+      Manufacturer="JARVIS"
+      Version="3.3.3"
+      UpgradeCode="{2D2E5B70-0A12-47EC-A596-69CA7479C7B8}"
+      Scope="perMachine">
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of J.A.R.V.I.S. is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="JARVIS">
+        <Component Id="MainApplication" Guid="*">
+          <File Id="JarvisExe" Source="$(JarvisExePath)" Name="JARVIS.exe" KeyPath="yes">
+            <Shortcut
+                Id="JarvisStartMenuShortcut"
+                Directory="ProgramMenuFolder"
+                Advertise="yes"
+                Name="J.A.R.V.I.S."
+                Description="Open J.A.R.V.I.S."
+                WorkingDirectory="INSTALLFOLDER" />
+          </File>
+        </Component>
+      </Directory>
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder" />
+
+    <Feature Id="MainFeature" Title="J.A.R.V.I.S." Level="1">
+      <ComponentRef Id="MainApplication" />
+    </Feature>
+  </Package>
+</Wix>

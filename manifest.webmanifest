@@ -1,0 +1,10 @@
+{
+  "name": "J.A.R.V.I.S.",
+  "short_name": "JARVIS",
+  "description": "Local voice HUD, Windows app launcher, research browser, and MakerWorld print assistant.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#03090c",
+  "theme_color": "#00e5ff"
+}

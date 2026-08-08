@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JARVIS Browser Link</title>
+  <style>
+    body{width:320px;margin:0;padding:16px;background:#071317;color:#d8f9ff;font:14px/1.4 system-ui,sans-serif}
+    h1{margin:0 0 6px;font-size:17px;letter-spacing:.05em;color:#00e5ff}.hint{margin:0 0 14px;color:#92bfc8;font-size:12px}
+    label{display:block;margin:10px 0 4px;color:#a9dfe8;font-size:12px}input{box-sizing:border-box;width:100%;padding:9px;border:1px solid #1d6574;border-radius:6px;background:#02080b;color:#e7fbff}
+    button{margin-top:12px;padding:9px 11px;border:1px solid #00d7ef;border-radius:6px;background:#06303a;color:#e7fbff;font-weight:700;cursor:pointer}button+button{margin-left:8px}.secondary{border-color:#2b7c89;background:#0b1d22}.status{min-height:20px;margin-top:12px;color:#92bfc8;font-size:12px}.ok{color:#57f0c0}.bad{color:#ffbd77}
+  </style>
+</head>
+<body>
+  <h1>JARVIS BROWSER LINK</h1>
+  <p class="hint">This pairs only with the JARVIS app running on this PC. It never connects to the public web server.</p>
+  <label for="baseUrl">Local JARVIS address</label>
+  <input id="baseUrl" value="http://127.0.0.1:5015" spellcheck="false">
+  <label for="pairingCode">Browser pairing code</label>
+  <input id="pairingCode" type="password" placeholder="Paste code from JARVIS settings" spellcheck="false">
+  <button id="connect">Connect</button><button class="secondary" id="readPage">Read this page</button>
+  <div class="status" id="status">Not connected.</div>
+  <script src="popup.js"></script>
+</body>
+</html>

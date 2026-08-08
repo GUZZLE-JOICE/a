@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>J.A.R.V.I.S. Web</title>
+  <style>
+    :root{--bg:#03090d;--panel:rgba(6,23,31,.92);--line:rgba(70,225,255,.28);--cyan:#48e8ff;--muted:#90abb3;--user:#123746;--error:#ffbd75}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% 0,#0c3540 0,transparent 35rem),var(--bg);color:#effcff;font-family:Inter,Segoe UI,Arial,sans-serif}.shell{width:min(940px,calc(100% - 28px));margin:0 auto;padding:30px 0}.top{display:flex;gap:18px;justify-content:space-between;align-items:start;border-bottom:1px solid var(--line);padding-bottom:20px}.eyebrow{font:700 11px/1.2 ui-monospace,Consolas,monospace;letter-spacing:.19em;color:var(--cyan)}h1{font-size:clamp(28px,5vw,46px);letter-spacing:.06em;margin:7px 0 0}.mode{max-width:260px;text-align:right;color:var(--muted);font-size:13px;line-height:1.45}.mode b{color:var(--cyan);font-weight:700}.card{margin-top:26px;border:1px solid var(--line);background:var(--panel);box-shadow:0 0 35px rgba(19,209,255,.08);padding:22px;border-radius:14px}.connect{max-width:580px;margin:48px auto}.connect h2{margin:0 0 8px;font-size:22px}.hint{color:var(--muted);font-size:14px;line-height:1.5;margin:0 0 18px}.field{display:grid;gap:7px;margin:14px 0}.field label{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}input,textarea{border:1px solid rgba(103,226,255,.28);border-radius:8px;background:#06171e;color:#effcff;padding:12px;font:inherit;outline:none}input:focus,textarea:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(72,232,255,.12)}button{border:1px solid var(--cyan);border-radius:8px;background:rgba(72,232,255,.1);color:#effcff;padding:11px 15px;font:700 13px Inter,Segoe UI,sans-serif;cursor:pointer}button:hover{background:rgba(72,232,255,.2)}button:disabled{opacity:.5;cursor:wait}.status{min-height:20px;font-size:13px;color:var(--muted);margin-top:14px}.status.error{color:var(--error)}#chat{display:none}.chathead{display:flex;align-items:center;justify-content:space-between;gap:12px}.chathead h2{margin:0;font-size:20px}.tiny{font:12px ui-monospace,Consolas,monospace;color:var(--cyan)}.messages{height:min(55vh,540px);overflow:auto;padding:18px 0 4px;display:grid;gap:12px}.message{max-width:85%;padding:12px 14px;border-radius:11px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}.message.user{justify-self:end;background:var(--user);border:1px solid rgba(103,226,255,.2)}.message.assistant{background:#081d25;border:1px solid rgba(103,226,255,.16)}.compose{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:15px}.compose textarea{resize:vertical;min-height:52px;max-height:180px}.footer{padding:18px 0 0;text-align:center;color:var(--muted);font-size:12px}@media(max-width:600px){.shell{width:min(100% - 20px,940px);padding-top:18px}.top{display:block}.mode{text-align:left;margin-top:14px}.card{padding:16px}.compose{grid-template-columns:1fr}.message{max-width:95%}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="top">
+      <div><div class="eyebrow">J.A.R.V.I.S. // REMOTE NEURAL LINK</div><h1>WEB MODE</h1></div>
+      <div class="mode"><b>NO DEVICE CONTROL</b><br>This page can only send chat requests to the owner’s shared Ollama server. It cannot open apps, move your mouse, read files, or control your computer.</div>
+    </header>
+
+    <section class="card connect" id="connectCard">
+      <h2>Connect to the owner’s JARVIS</h2>
+      <p class="hint">Paste the access code the owner gave you. Ollama runs on their computer; you do not need to install it.</p>
+      <div class="field"><label for="accessCode">Owner access code</label><input id="accessCode" type="password" autocomplete="off" minlength="8" placeholder="Paste the code here"></div>
+      <button id="connectBtn" type="button">Connect</button>
+      <div class="status" id="connectStatus"></div>
+    </section>
+
+    <section class="card" id="chat">
+      <div class="chathead"><h2>JARVIS chat</h2><span class="tiny" id="modelLabel">REMOTE</span></div>
+      <div class="messages" id="messages" aria-live="polite"></div>
+      <div class="compose"><textarea id="prompt" placeholder="Ask JARVIS something…" maxlength="24000"></textarea><button id="sendBtn" type="button">Send</button></div>
+      <div class="status" id="chatStatus"></div>
+    </section>
+    <div class="footer">The access code is kept only for this browser session. Close the tab to remove it.</div>
+  </main>
+  <script>
+  (function(){
+    'use strict';
+    var base=location.origin.replace(/\/$/,'');
+    var code=sessionStorage.getItem('jarvis_web_code')||'';
+    var history=[];
+    var access=document.getElementById('accessCode'),connect=document.getElementById('connectBtn'),connectStatus=document.getElementById('connectStatus'),chat=document.getElementById('chat'),connectCard=document.getElementById('connectCard'),messages=document.getElementById('messages'),prompt=document.getElementById('prompt'),send=document.getElementById('sendBtn'),chatStatus=document.getElementById('chatStatus'),modelLabel=document.getElementById('modelLabel');
+    access.value=code;
+    function setStatus(el,text,isError){el.textContent=text||'';el.className='status'+(isError?' error':'');}
+    function add(role,text){var item=document.createElement('div');item.className='message '+role;item.textContent=text;messages.appendChild(item);messages.scrollTop=messages.scrollHeight;}
+    function request(path,body){return fetch(base+path,{method:'POST',headers:{'Content-Type':'application/json','X-Jarvis-Code':code},body:body?JSON.stringify(body):undefined}).then(function(r){return r.json().catch(function(){return{};}).then(function(data){if(!r.ok)throw new Error(data.error||('Server returned '+r.status));return data;});});}
+    function connected(data){sessionStorage.setItem('jarvis_web_code',code);connectCard.style.display='none';chat.style.display='block';modelLabel.textContent=(data.model||'OLLAMA').toUpperCase()+' · REMOTE';if(!messages.children.length)add('assistant','Connected. What would you like help with?');prompt.focus();}
+    function tryConnect(){code=access.value.trim();if(code.length<8){setStatus(connectStatus,'Paste the complete owner access code first.',true);return;}connect.disabled=true;setStatus(connectStatus,'Connecting…');request('/remote/health').then(function(data){connected(data);}).catch(function(err){setStatus(connectStatus,err.message||'Could not connect.',true);}).finally(function(){connect.disabled=false;});}
+    function buildPrompt(text){var recent=history.slice(-9,-1).map(function(entry){return (entry.role==='user'?'User: ':'JARVIS: ')+entry.text;}).join('\n');return 'You are JARVIS. Be helpful, direct, and concise.\n\n'+(recent?recent+'\n':'')+'User: '+text;}
+    function sendMessage(){var text=prompt.value.trim();if(!text)return;prompt.value='';history.push({role:'user',text:text});add('user',text);send.disabled=true;setStatus(chatStatus,'JARVIS is thinking…');request('/remote/generate',{prompt:buildPrompt(text),options:{num_predict:320,temperature:.55}}).then(function(data){var answer=String(data.response||'').trim()||'I did not get a response.';history.push({role:'assistant',text:answer});add('assistant',answer);setStatus(chatStatus,'');}).catch(function(err){add('assistant','Error: '+(err.message||'Could not reach JARVIS.'));setStatus(chatStatus,'',false);}).finally(function(){send.disabled=false;prompt.focus();});}
+    connect.addEventListener('click',tryConnect);access.addEventListener('keydown',function(e){if(e.key==='Enter')tryConnect();});send.addEventListener('click',sendMessage);prompt.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}});
+  }());
+  </script>
+</body>
+</html>
